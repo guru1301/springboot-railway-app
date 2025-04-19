@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RailGo - Check PNR Status</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.2)), url('/api/placeholder/1920/1080') no-repeat center center/cover;
+      background-attachment: fixed;
+      transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+      height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('/api/placeholder/1920/1080') no-repeat center center/cover;
+      opacity: 0.2;
+      z-index: -1;
+      filter: blur(1px);
+    }
+
+    .light-mode {
+      background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(240, 244, 255, 0.8)), url('/api/placeholder/1920/1080') no-repeat center center/cover;
+      color: #000;
+    }
+
+    .dark-mode {
+      background: linear-gradient(rgba(8, 25, 55, 0.8), rgba(0, 17, 34, 0.9)), url('/api/placeholder/1920/1080') no-repeat center center/cover;
+      color: #fff;
+    }
+
+    /* Header */
+    .header {
+      width: 100%;
+      background: linear-gradient(135deg, #081937, #001122);
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10;
+      color: white;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .menu-toggle {
+      cursor: pointer;
+      font-size: 1.8rem;
+      color: white;
+      transition: color 0.3s ease;
+    }
+
+    .menu-toggle:hover {
+      color: #FF69B4;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      background: linear-gradient(45deg, #FF69B4, #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo i {
+      font-size: 2rem;
+      margin-right: 5px;
+      filter: drop-shadow(0 0 2px rgba(255, 105, 180, 0.7));
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 20px;
+      transition: color 0.3s ease-in-out;
+      position: relative;
+      padding: 5px 0;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #FF69B4;
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover {
+      color: #FF69B4;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .theme-toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+    }
+
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #FF69B4;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 300px;
+      height: 100vh;
+      background: linear-gradient(135deg, #081937, #001122);
+      color: white;
+      z-index: 999;
+      transition: left 0.3s ease-in-out, background 0.3s ease-in-out;
+      padding-top: 80px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+    }
+
+    .light-mode .sidebar {
+      background: linear-gradient(135deg, #f0f4ff, #d8e1fb);
+      color: #333;
+    }
+
+    .dark-mode .sidebar {
+      background: linear-gradient(135deg, #081937, #001122);
+      color: white;
+    }
+
+    .light-mode .sidebar-menu a {
+      color: #333;
+    }
+
+    .light-mode .sidebar-menu a:hover {
+      background: rgba(0, 123, 255, 0.15);
+      color: #007BFF;
+    }
+
+    .light-mode .sidebar-header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .light-mode .sidebar-close {
+      color: #333;
+    }
+
+    .light-mode .sidebar-close:hover {
+      color: #007BFF;
+    }
+
+    .light-mode .sidebar-menu li {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .sidebar-header h3 {
+      font-size: 1.5rem;
+      background: linear-gradient(45deg, #FF69B4, #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar-menu li {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: all 0.3s;
+    }
+
+    .sidebar-menu a:hover {
+      background: rgba(255, 105, 180, 0.15);
+      color: #FF69B4;
+      padding-left: 25px;
+    }
+
+    .sidebar-menu i {
+      font-size: 1.3rem;
+      width: 30px;
+      text-align: center;
+    }
+
+    .sidebar-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .sidebar-close:hover {
+      color: #FF69B4;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 998;
+      display: none;
+      transition: all 0.3s;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    /* Main Content */
+    .main-content {
+      display: flex;
+      height: calc(100vh - 70px);
+      margin-top: 70px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5%;
+      position: relative;
+      background: url('/api/placeholder/1920/1080') no-repeat center center/cover;
+      background-attachment: fixed;
+      background-blend-mode: overlay;
+    }
+
+    .main-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 105, 180, 0.1) 0%, rgba(0, 123, 255, 0.1) 100%);
+      z-index: -1;
+    }
+
+    /* PNR Container - Smaller rectangular design */
+    .pnr-container {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 550px;
+      color: #333;
+      transition: all 0.3s ease-in-out;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      height: auto;
+      min-height: 300px; /* Smaller height than booking container */
+    }
+
+    .pnr-container::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: -50px;
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(45deg, #FF69B4, #007BFF);
+      border-radius: 50%;
+      opacity: 0.3;
+      z-index: -1;
+      animation: float 8s infinite alternate ease-in-out;
+    }
+
+    .pnr-container::after {
+      content: '';
+      position: absolute;
+      bottom: -50px;
+      right: -50px;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(45deg, #007BFF, #FF69B4);
+      border-radius: 50%;
+      opacity: 0.3;
+      z-index: -1;
+      animation: float 10s infinite alternate-reverse ease-in-out;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0); }
+      50% { transform: translate(20px, 20px); }
+      100% { transform: translate(-20px, 20px); }
+    }
+
+    .dark-mode .pnr-container {
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .pnr-title {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: bold;
+      margin-bottom: 25px;
+      transition: color 0.3s ease-in-out;
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .pnr-title::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(45deg, #007BFF, #FF69B4);
+      border-radius: 3px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .light-mode .pnr-title {
+      color: #040404;
+    }
+
+    .dark-mode .pnr-title {
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-label i {
+      font-size: 1.2rem;
+      color: #007BFF;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    }
+
+    .dark-mode .form-label i {
+      color: #FF69B4;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 14px 15px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(204, 204, 204, 0.5);
+      background-color: rgba(255, 255, 255, 0.9);
+      color: #333;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-control:focus {
+      border-color: #007BFF;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      background-color: white;
+    }
+
+    .dark-mode .form-control {
+      background-color: rgba(34, 34, 34, 0.9);
+      color: white;
+      border: 1px solid rgba(85, 85, 85, 0.5);
+    }
+
+    .dark-mode .form-control:focus {
+      background-color: #222;
+      border-color: #FF69B4;
+      box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.2), 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .search-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #007BFF, #FF69B4);
+      color: white;
+      padding: 14px;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.5s ease;
+      z-index: -1;
+    }
+
+    .search-btn:hover::before {
+      left: 100%;
+    }
+
+    .search-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.5);
+    }
+
+    .search-btn:active {
+      transform: translateY(1px);
+    }
+
+    .search-btn i {
+      margin-right: 10px;
+    }
+
+    /* Decorative elements */
+    .pnr-icon {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      font-size: 3.5rem;
+      opacity: 0.15;
+      color: #007BFF;
+      animation: pulse 3s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.15; }
+      50% { transform: scale(1.1); opacity: 0.2; }
+      100% { transform: scale(1); opacity: 0.15; }
+    }
+
+    .dark-mode .pnr-icon {
+      color: #FF69B4;
+    }
+
+    .badge-container {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(5px);
+    }
+
+    .badge-secure {
+      background-color: rgba(0, 128, 0, 0.15);
+      color: green;
+      border: 1px solid rgba(0, 128, 0, 0.2);
+    }
+
+    .badge-quick {
+      background-color: rgba(0, 123, 255, 0.15);
+      color: #007BFF;
+      border: 1px solid rgba(0, 123, 255, 0.2);
+    }
+
+    .pnr-result {
+      margin-top: 25px;
+      border-top: 1px dashed rgba(0, 0, 0, 0.1);
+      padding-top: 20px;
+      display: none;
+    }
+
+    .dark-mode .pnr-result {
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .pnr-info {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .dark-mode .pnr-info {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .pnr-info-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pnr-info-data {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pnr-info-item {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .pnr-info-label {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-bottom: 3px;
+    }
+
+    .pnr-info-value {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .pnr-status {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: inline-block;
+    }
+
+    .status-confirmed {
+      background-color: rgba(40, 167, 69, 0.15);
+      color: #28a745;
+    }
+
+    .status-waitlist {
+      background-color: rgba(255, 193, 7, 0.15);
+      color: #ffc107;
+    }
+
+    .status-cancelled {
+      background-color: rgba(220, 53, 69, 0.15);
+      color: #dc3545;
+    }
+
+    .passenger-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+
+    .passenger-table th, 
+    .passenger-table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .dark-mode .passenger-table th, 
+    .dark-mode .passenger-table td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .passenger-table th {
+      font-weight: 600;
+      opacity: 0.8;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 15px 20px;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+      }
+
+      .nav-links a {
+        margin-left: 15px;
+        font-size: 0.9rem;
+      }
+
+      .pnr-container {
+        padding: 20px;
+        margin: 0 15px;
+      }
+
+      .pnr-title {
+        font-size: 1.4rem;
+      }
+
+      .sidebar {
+        width: 280px;
+        left: -280px;
+      }
+
+      .pnr-info-data {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .badge-container {
+        position: static;
+        margin-bottom: 15px;
+        justify-content: center;
+      }
+    }
+
+    /* Moving Train Animation */
+    .moving-train {
+      position: absolute;
+      bottom: 10px;
+      left: -100px;
+      font-size: 2rem;
+      color: rgba(255, 105, 180, 0.6);
+      animation: moveTrain 15s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes moveTrain {
+      0% { transform: translateX(-100px); }
+      100% { transform: translateX(calc(100vw + 100px)); }
+    }
+
+    /* Star background */
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    .star {
+      position: absolute;
+      background-color: white;
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: twinkle var(--duration) infinite ease-in-out;
+      animation-delay: var(--delay);
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Background Pattern */
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+      background-size: 30px 30px;
+      z-index: -3;
+      pointer-events: none;
+    }
+
+    .dark-mode .bg-pattern {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="light-mode">
+    <!-- Background Elements -->
+    <div class="bg-pattern"></div>
+    <div class="stars">
+      <!-- Stars will be added by JavaScript -->
+    </div>
+    <div class="moving-train">
+      <i class="bi bi-train-front"></i>
+    </div>
+
+    <header class="header">
+      <div class="logo-container">
+        <div class="menu-toggle" id="menu-toggle">
+          <i class="bi bi-list"></i>
+        </div>
+        <div class="logo">
+          <i class="bi bi-train-lightrail-front"></i> RailGo
+        </div>
+      </div>
+        
+      <nav class="nav-links">
+        <a href="#"><i class="bi bi-house-door"></i> Home</a>
+        <a href="#"><i class="bi bi-info-circle"></i> About</a>
+        <a href="#"><i class="bi bi-envelope"></i> Contact</a>
+        <a href="#"><i class="bi bi-person-plus"></i> Sign Up</a>
+        <div class="theme-toggle-container">
+          <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+          </label>
+          <span id="theme-text">🌙</span>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <button class="sidebar-close" id="sidebar-close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <div class="sidebar-header">
+        <h3>RailGo Menu</h3>
+      </div>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="#">
+            <i class="bi bi-ticket-perforated-fill"></i>
+            <span>My Bookings</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-search"></i>
+            <span>PNR Enquiry</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-clock-history"></i>
+            <span>Last Transactions</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-calendar-check"></i>
+            <span>Upcoming Journey</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-x-circle"></i>
+            <span>Cancel Ticket</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-geo-alt"></i>
+            <span>Track Your Train</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-person"></i>
+            <span>My Profile</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-question-circle"></i>
+            <span>Help & Support</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="overlay" id="overlay"></div>
+      
+    <div class="main-content">
+      <div class="pnr-container">
+        <div class="badge-container">
+          <span class="badge badge-secure"><i class="bi bi-shield-check"></i> Secure</span>
+          <span class="badge badge-quick"><i class="bi bi-lightning"></i> Quick</span>
+        </div>
+        <h2 class="pnr-title">PNR Status Enquiry</h2>
+        <form id="pnr-form" class="pnr-form">
+          <div class="form-group">
+            <label for="pnr-number" class="form-label"><i class="bi bi-upc-scan"></i> PNR Number</label>
+            <input type="text" class="form-control" id="pnr-number" name="pnr-number" placeholder="Enter 10-digit PNR number" pattern="[0-9]{10}" required>
+          </div>
+
+          <button type="button" id="search-button" class="search-btn">
+            <i class="bi bi-search"></i> Check PNR Status
+          </button>
+        </form>
+
+        <!-- PNR Results (Hidden by default, shown after search) -->
+        <div class="pnr-result" id="pnr-result">
+          <!-- Train Info -->
+          <div class="pnr-info">
+            <div class="pnr-info-title">
+              <i class="bi bi-train-front"></i> Train Information
+            </div>
+            <div class="pnr-info-data">
+                <div class="pnr-info-data">
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Train No.</div>
+                      <div class="pnr-info-value">12651</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Train Name</div>
+                      <div class="pnr-info-value">Karnataka Express</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Date of Journey</div>
+                      <div class="pnr-info-value">15-Apr-2025</div>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- Journey Details -->
+                <div class="pnr-info">
+                  <div class="pnr-info-title">
+                    <i class="bi bi-map"></i> Journey Details
+                  </div>
+                  <div class="pnr-info-data">
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">From</div>
+                      <div class="pnr-info-value">BLR</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">To</div>
+                      <div class="pnr-info-value">DEL</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Boarding</div>
+                      <div class="pnr-info-value">BLR</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Class</div>
+                      <div class="pnr-info-value">3A</div>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- Passenger Information -->
+                <div class="pnr-info">
+                  <div class="pnr-info-title">
+                    <i class="bi bi-people"></i> Passenger Details
+                  </div>
+                  <table class="passenger-table">
+                    <thead>
+                      <tr>
+                        <th>No.</th>
+                        <th>Booking Status</th>
+                        <th>Current Status</th>
+                        <th>Coach</th>
+                        <th>Berth</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td>S4, 24</td>
+                        <td><span class="pnr-status status-confirmed">CNF</span></td>
+                        <td>S4</td>
+                        <td>LB</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>S4, 25</td>
+                        <td><span class="pnr-status status-confirmed">CNF</span></td>
+                        <td>S4</td>
+                        <td>MB</td>
+                      </tr>
+                      <tr>
+                        <td>3</td>
+                        <td>WL 23</td>
+                        <td><span class="pnr-status status-waitlist">WL 5</span></td>
+                        <td>-</td>
+                        <td>-</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+      
+              <div class="pnr-icon">
+                <i class="bi bi-credit-card-2-front"></i>
+              </div>
+            </div>
+          </div>
+      
+          <script>
+            // Theme Toggle
+            
+  // Theme Toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeText = document.getElementById('theme-text');
+
+  themeToggle.addEventListener('change', function () {
+    if (this.checked) {
+      document.body.classList.remove('light-mode');
+      document.body.classList.add('dark-mode');
+      themeText.textContent = '☀️';
+    } else {
+      document.body.classList.remove('dark-mode');
+      document.body.classList.add('light-mode');
+      themeText.textContent = '🌙';
+    }
+  });
+
+  // Sidebar Toggle
+  const menuToggle = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const sidebarClose = document.getElementById('sidebar-close');
+
+  menuToggle.addEventListener('click', function () {
+    sidebar.classList.add('active');
+    overlay.classList.add('active');
+  });
+
+  sidebarClose.addEventListener('click', function () {
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+  });
+
+  overlay.addEventListener('click', function () {
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+  });
+
+  // Show PNR Result with API
+  const searchButton = document.getElementById('search-button');
+  const pnrResult = document.getElementById('pnr-result');
+
+  searchButton.addEventListener('click', function () {
+    const pnrInput = document.getElementById('pnr-number');
+
+    if (pnrInput.value.length > 0) {
+      searchButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Searching...';
+      searchButton.disabled = true;
+
+      fetch(`http://localhost:1301/api/pnr-status/check/${pnrInput.value}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('PNR not found');
+          }
+          return response.json();
+        })
+        .then(booking => {
+          updatePnrResultUI(booking);
+
+          searchButton.innerHTML = '<i class="bi bi-search"></i> Check PNR Status';
+          searchButton.disabled = false;
+
+          pnrResult.style.display = 'block';
+          pnrResult.scrollIntoView({ behavior: 'smooth' });
+        })
+        .catch(error => {
+          alert(error.message);
+          searchButton.innerHTML = '<i class="bi bi-search"></i> Check PNR Status';
+          searchButton.disabled = false;
+        });
+    } else {
+      alert('Please enter your PNR number');
+    }
+  });
+
+  // Function to update the result UI
+  function updatePnrResultUI(booking) {
+  // Train Info section
+  const trainInfo = `
+    <div class="pnr-info">
+      <div class="pnr-info-title">
+        <i class="bi bi-train-front"></i> Train Information
+      </div>
+      <div class="pnr-info-data">
+        <div class="pnr-info-item">
+          <div class="pnr-info-label">Train No.</div>
+          <div class="pnr-info-value">${booking.trainNumber}</div>
+        </div>
+        <div class="pnr-info-item">
+          <div class="pnr-info-label">Train Name</div>
+          <div class="pnr-info-value">${booking.trainName}</div>
+        </div>
+        <div class="pnr-info-item">
+          <div class="pnr-info-label">Date of Journey</div>
+          <div class="pnr-info-value">${booking.date}</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Journey Details
+  const journeyDetails = `
+    <div class="pnr-info">
+      <div class="pnr-info-title">
+        <i class="bi bi-map"></i> Journey Details
+      </div>
+      <div class="pnr-info-data">
+        <div class="pnr-info-item">
+          <div class="pnr-info-label">From</div>
+          <div class="pnr-info-value">${booking.source}</div>
+        </div>
+        <div class="pnr-info-item">
+          <div class="pnr-info-label">To</div>
+          <div class="pnr-info-value">${booking.destination}</div>
+        </div>
+        <div class="pnr-info-item">
+          <div class="pnr-info-label">Class</div>
+          <div class="pnr-info-value">${booking.classType}</div>
+        </div>
+        <div class="pnr-info-item">
+          <div class="pnr-info-label">Status</div>
+          <div class="pnr-info-value">${booking.bookingStatus}</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Passenger information (assuming there's at least one passenger)
+  let passengerRows = '';
+  booking.passengers.forEach((passenger, index) => {
+    passengerRows += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${passenger.bookingStatus || booking.bookingStatus}</td>
+        <td><span class="pnr-status status-confirmed">${passenger.currentStatus || booking.bookingStatus}</span></td>
+        <td>${passenger.coach || '-'}</td>
+        <td>${passenger.berth || '-'}</td>
+      </tr>`;
+  });
+
+  const passengersInfo = `
+    <div class="pnr-info">
+      <div class="pnr-info-title">
+        <i class="bi bi-people"></i> Passenger Details
+      </div>
+      <table class="passenger-table">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>Booking Status</th>
+            <th>Current Status</th>
+            <th>Coach</th>
+            <th>Berth</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${passengerRows}
+        </tbody>
+      </table>
+    </div>`;
+
+  // Put everything together
+  pnrResult.innerHTML = trainInfo + journeyDetails + passengersInfo;
+}
+  // Create stars for background
+  function createStars() {
+    const starsContainer = document.querySelector('.stars');
+    const starCount = 50;
+
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.classList.add('star');
+
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const size = Math.random() * 2 + 1;
+      const duration = Math.random() * 3 + 2;
+      const delay = Math.random() * 5;
+
+      star.style.left = `${x}%`;
+      star.style.top = `${y}%`;
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      star.style.setProperty('--duration', `${duration}s`);
+      star.style.setProperty('--delay', `${delay}s`);
+
+      starsContainer.appendChild(star);
+    }
+  }
+
+  // Initialize stars
+  createStars();
+</script>
+
+      </body>
+      </html>

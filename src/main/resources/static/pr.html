@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RailGo - Check PNR Status</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+</head>
+<body class="light-mode">
+    <!-- Background Elements -->
+    <div class="bg-pattern"></div>
+    <div class="stars">
+      <!-- Stars will be added by JavaScript -->
+    </div>
+    <div class="moving-train">
+      <i class="bi bi-train-front"></i>
+    </div>
+
+    <header class="header">
+      <div class="logo-container">
+        <div class="menu-toggle" id="menu-toggle">
+          <i class="bi bi-list"></i>
+        </div>
+        <div class="logo">
+          <i class="bi bi-train-lightrail-front"></i> RailGo
+        </div>
+      </div>
+        
+      <nav class="nav-links">
+        <a href="#"><i class="bi bi-house-door"></i> Home</a>
+        <a href="#"><i class="bi bi-info-circle"></i> About</a>
+        <a href="#"><i class="bi bi-envelope"></i> Contact</a>
+        <a href="#"><i class="bi bi-person-plus"></i> Sign Up</a>
+        <div class="theme-toggle-container">
+          <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle">
+            <span class="slider"></span>
+          </label>
+          <span id="theme-text">🌙</span>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <button class="sidebar-close" id="sidebar-close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <div class="sidebar-header">
+        <h3>RailGo Menu</h3>
+      </div>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="#">
+            <i class="bi bi-ticket-perforated-fill"></i>
+            <span>My Bookings</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-search"></i>
+            <span>PNR Enquiry</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-clock-history"></i>
+            <span>Last Transactions</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-calendar-check"></i>
+            <span>Upcoming Journey</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-x-circle"></i>
+            <span>Cancel Ticket</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-geo-alt"></i>
+            <span>Track Your Train</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-person"></i>
+            <span>My Profile</span>
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            <i class="bi bi-question-circle"></i>
+            <span>Help & Support</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="overlay" id="overlay"></div>
+      
+    <div class="main-content">
+      <div class="pnr-container">
+        <div class="badge-container">
+          <span class="badge badge-secure"><i class="bi bi-shield-check"></i> Secure</span>
+          <span class="badge badge-quick"><i class="bi bi-lightning"></i> Quick</span>
+        </div>
+        <h2 class="pnr-title">PNR Status Enquiry</h2>
+        <form id="pnr-form" class="pnr-form">
+          <div class="form-group">
+            <label for="pnr-number" class="form-label"><i class="bi bi-upc-scan"></i> PNR Number</label>
+            <input type="text" class="form-control" id="pnr-number" name="pnr-number" placeholder="Enter 10-digit PNR number" pattern="[0-9]{10}" required>
+          </div>
+
+          <button type="button" id="search-button" class="search-btn">
+            <i class="bi bi-search"></i> Check PNR Status
+          </button>
+        </form>
+
+        <!-- PNR Results (Hidden by default, shown after search) -->
+        <div class="pnr-result" id="pnr-result">
+          <!-- Train Info -->
+          <div class="pnr-info">
+            <div class="pnr-info-title">
+              <i class="bi bi-train-front"></i> Train Information
+            </div>
+            <div class="pnr-info-data">
+                <div class="pnr-info-data">
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Train No.</div>
+                      <div class="pnr-info-value">12651</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Train Name</div>
+                      <div class="pnr-info-value">Karnataka Express</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Date of Journey</div>
+                      <div class="pnr-info-value">15-Apr-2025</div>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- Journey Details -->
+                <div class="pnr-info">
+                  <div class="pnr-info-title">
+                    <i class="bi bi-map"></i> Journey Details
+                  </div>
+                  <div class="pnr-info-data">
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">From</div>
+                      <div class="pnr-info-value">BLR</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">To</div>
+                      <div class="pnr-info-value">DEL</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Boarding</div>
+                      <div class="pnr-info-value">BLR</div>
+                    </div>
+                    <div class="pnr-info-item">
+                      <div class="pnr-info-label">Class</div>
+                      <div class="pnr-info-value">3A</div>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- Passenger Information -->
+                <div class="pnr-info">
+                  <div class="pnr-info-title">
+                    <i class="bi bi-people"></i> Passenger Details
+                  </div>
+                  <table class="passenger-table">
+                    <thead>
+                      <tr>
+                        <th>No.</th>
+                        <th>Booking Status</th>
+                        <th>Current Status</th>
+                        <th>Coach</th>
+                        <th>Berth</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>1</td>
+                        <td>S4, 24</td>
+                        <td><span class="pnr-status status-confirmed">CNF</span></td>
+                        <td>S4</td>
+                        <td>LB</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>S4, 25</td>
+                        <td><span class="pnr-status status-confirmed">CNF</span></td>
+                        <td>S4</td>
+                        <td>MB</td>
+                      </tr>
+                      <tr>
+                        <td>3</td>
+                        <td>WL 23</td>
+                        <td><span class="pnr-status status-waitlist">WL 5</span></td>
+                        <td>-</td>
+                        <td>-</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+      
+              <div class="pnr-icon">
+                <i class="bi bi-credit-card-2-front"></i>
+              </div>
+            </div>
+          </div>
+      
+          <script>
+            // Theme Toggle
+            
+  // Theme Toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeText = document.getElementById('theme-text');
+
+  themeToggle.addEventListener('change', function () {
+    if (this.checked) {
+      document.body.classList.remove('light-mode');
+      document.body.classList.add('dark-mode');
+      themeText.textContent = '☀️';
+    } else {
+      document.body.classList.remove('dark-mode');
+      document.body.classList.add('light-mode');
+      themeText.textContent = '🌙';
+    }
+  });
+
+  // Sidebar Toggle
+  const menuToggle = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  const sidebarClose = document.getElementById('sidebar-close');
+
+  menuToggle.addEventListener('click', function () {
+    sidebar.classList.add('active');
+    overlay.classList.add('active');
+  });
+
+  sidebarClose.addEventListener('click', function () {
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+  });
+
+  overlay.addEventListener('click', function () {
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+  });
+
+  // Show PNR Result with API
+  const searchButton = document.getElementById('search-button');
+  const pnrResult = document.getElementById('pnr-result');
+
+  searchButton.addEventListener('click', function () {
+    const pnrInput = document.getElementById('pnr-number');
+
+    if (pnrInput.value.length > 0) {
+      searchButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Searching...';
+      searchButton.disabled = true;
+
+      fetch(`http://localhost:1301/api/pnr/${pnrInput.value}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('PNR not found');
+          }
+          return response.json();
+        })
+        .then(booking => {
+          updatePnrResultUI(booking);
+
+          searchButton.innerHTML = '<i class="bi bi-search"></i> Check PNR Status';
+          searchButton.disabled = false;
+
+          pnrResult.style.display = 'block';
+          pnrResult.scrollIntoView({ behavior: 'smooth' });
+        })
+        .catch(error => {
+          alert(error.message);
+          searchButton.innerHTML = '<i class="bi bi-search"></i> Check PNR Status';
+          searchButton.disabled = false;
+        });
+    } else {
+      alert('Please enter your PNR number');
+    }
+  });
+
+  // Function to update the result UI
+  function updatePnrResultUI(booking) {
+    pnrResult.innerHTML = `
+      <h3>PNR Details</h3>
+      <p><strong>Name:</strong> ${booking.name}</p>
+      <p><strong>Email:</strong> ${booking.email}</p>
+      <p><strong>Date:</strong> ${booking.date}</p>
+      <p><strong>Tickets:</strong> ${booking.ticketCount}</p>
+      <p><strong>Total Amount:</strong> ₹${booking.totalAmount}</p>
+    `;
+  }
+
+  // Create stars for background
+  function createStars() {
+    const starsContainer = document.querySelector('.stars');
+    const starCount = 50;
+
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.classList.add('star');
+
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const size = Math.random() * 2 + 1;
+      const duration = Math.random() * 3 + 2;
+      const delay = Math.random() * 5;
+
+      star.style.left = `${x}%`;
+      star.style.top = `${y}%`;
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      star.style.setProperty('--duration', `${duration}s`);
+      star.style.setProperty('--delay', `${delay}s`);
+
+      starsContainer.appendChild(star);
+    }
+  }
+
+  // Initialize stars
+  createStars();
+</script>
+
+      </body>
+      </html>

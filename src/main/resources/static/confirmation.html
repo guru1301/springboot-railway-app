@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation - RailGo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('/api/placeholder/1920/1080') no-repeat center center/cover;
+            opacity: 0.2;
+            z-index: -1;
+            filter: blur(1px);
+        }
+
+        .light-mode {
+            background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(240, 244, 255, 0.8)), url('/api/placeholder/1920/1080') no-repeat center center/cover;
+            color: #000;
+        }
+
+        .dark-mode {
+            background: linear-gradient(rgba(8, 25, 55, 0.8), rgba(0, 17, 34, 0.9)), url('/api/placeholder/1920/1080') no-repeat center center/cover;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            width: 100%;
+            background: linear-gradient(135deg, #081937, #001122);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            color: white;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #FF69B4, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            margin-right: 5px;
+            filter: drop-shadow(0 0 2px rgba(255, 105, 180, 0.7));
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 20px;
+            transition: color 0.3s ease-in-out;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #FF69B4;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: #FF69B4;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .theme-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #FF69B4;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            min-height: 100vh;
+            margin-top: 70px;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 5%;
+            position: relative;
+        }
+
+        .confirmation-container {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 800px;
+            color: #333;
+            transition: all 0.3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dark-mode .confirmation-container {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .confirmation-container::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, #FF69B4, #007BFF);
+            border-radius: 50%;
+            opacity: 0.3;
+            z-index: -1;
+            animation: float 8s infinite alternate ease-in-out;
+        }
+
+        .confirmation-container::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #007BFF, #FF69B4);
+            border-radius: 50%;
+            opacity: 0.3;
+            z-index: -1;
+            animation: float 10s infinite alternate-reverse ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 20px); }
+            100% { transform: translate(-20px, 20px); }
+        }
+
+        .confirmation-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .confirmation-title {
+            background: linear-gradient(135deg, #0d6efd, #FF69B4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .confirmation-title {
+            background: linear-gradient(135deg, #FF69B4, #5bb6fd);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .success-checkmark {
+            color: #28a745;
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .dark-mode .success-checkmark {
+            color: #2cdc51;
+        }
+
+        .booking-info {
+            border-top: 1px solid rgba(204, 204, 204, 0.3);
+            border-bottom: 1px solid rgba(204, 204, 204, 0.3);
+            padding: 20px 0;
+            margin: 20px 0;
+        }
+
+        .dark-mode .booking-info {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .details-row {
+            margin-bottom: 15px;
+        }
+
+        .details-label {
+            font-weight: 600;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dark-mode .details-label {
+            color: #ccc;
+        }
+
+        .details-label i {
+            color: #007BFF;
+        }
+
+        .dark-mode .details-label i {
+            color: #FF69B4;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge-paid {
+            background-color: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .dark-mode .badge-paid {
+            background-color: rgba(40, 167, 69, 0.25);
+            color: #4dfa74;
+        }
+
+        .passenger-header {
+            background: rgba(0, 123, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .dark-mode .passenger-header {
+            background: rgba(255, 105, 180, 0.1);
+        }
+
+        .passenger-row {
+            padding: 10px;
+            border-bottom: 1px solid rgba(204, 204, 204, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .passenger-row:hover {
+            background: rgba(0, 123, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .dark-mode .passenger-row:hover {
+            background: rgba(255, 105, 180, 0.05);
+        }
+
+        .section-title {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #007BFF;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, #007BFF, transparent);
+            border-radius: 2px;
+        }
+
+        .dark-mode .section-title {
+            color: #FF69B4;
+        }
+
+        .dark-mode .section-title::after {
+            background: linear-gradient(90deg, #FF69B4, transparent);
+        }
+
+        .pnr-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            letter-spacing: 1px;
+        }
+
+        .dark-mode .pnr-display {
+            color: #4dfa74;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #007BFF, #FF69B4);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
+            background: linear-gradient(45deg, #0062cc, #004494);
+        }
+
+        .btn-outline-secondary {
+            background: transparent;
+            border: 2px solid #6c757d;
+            color: #6c757d;
+        }
+
+        .dark-mode .btn-outline-secondary {
+            border: 2px solid #adb5bd;
+            color: #adb5bd;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #6c757d;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .dark-mode .btn-outline-secondary:hover {
+            background: #adb5bd;
+            color: #212529;
+        }
+
+        .train-icon {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 5rem;
+            opacity: 0.15;
+            color: #007BFF;
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        .dark-mode .train-icon {
+            color: #FF69B4;
+        }
+
+        /* Background Pattern */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -3;
+            pointer-events: none;
+        }
+
+        .dark-mode .bg-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        }
+
+        /* Moving Train Animation */
+        .moving-train {
+            position: absolute;
+            bottom: 10px;
+            left: -100px;
+            font-size: 2rem;
+            color: rgba(255, 105, 180, 0.6);
+            animation: moveTrain 15s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes moveTrain {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .error-message {
+            background-color: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .dark-mode .error-message {
+            background-color: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #ff6b6b;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .confirmation-container {
+                padding: 25px;
+                margin: 0 15px;
+            }
+
+            .nav-links a {
+                margin-left: 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <!-- Background Elements -->
+    <div class="bg-pattern"></div>
+    <div class="moving-train">
+        <i class="bi bi-train-front"></i>
+    </div>
+
+    <header class="header">
+        <div class="logo-container">
+            <div class="logo">
+                <i class="bi bi-train-lightrail-front"></i> RailGo
+            </div>
+        </div>
+        
+        <nav class="nav-links">
+            <a href="index.html"><i class="bi bi-house-door"></i> Home</a>
+            <a href="#"><i class="bi bi-ticket-perforated"></i> My Bookings</a>
+            <a href="#"><i class="bi bi-person"></i> My Account</a>
+            <div class="theme-toggle-container">
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span id="theme-text">🌙</span>
+            </div>
+        </nav>
+    </header>
+
+    <div class="main-content">
+        <div class="confirmation-container">
+            <div class="confirmation-header">
+                <h1 class="confirmation-title">RailGo - Booking Confirmation</h1>
+                <div class="success-checkmark">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <h2>Your booking is confirmed!</h2>
+                <p class="text-muted">Thank you for choosing RailGo for your journey.</p>
+            </div>
+            
+            <div class="booking-info" id="bookingDetails">
+                <!-- Loading spinner will be shown initially -->
+                <div class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                
+                <!-- Booking data will be loaded here -->
+                <div id="bookingDataContainer" class="container" style="display: none;">
+                    <div class="row text-center mb-4">
+                        <div class="col-12">
+                            <h3>Your PNR: <span class="pnr-display" id="pnrNumber">Loading...</span></h3>
+                        </div>
+                    </div>
+                    
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-train"></i> Train Number:
+                        </div>
+                        <div class="col-md-8" id="trainNumber">Loading...</div>
+                    </div>
+                    
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-cursor"></i> Train Name:
+                        </div>
+                        <div class="col-md-8" id="trainName">Loading...</div>
+                    </div>
+                    
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-geo-alt"></i> Journey:
+                        </div>
+                        <div class="col-md-8" id="journey">Loading...</div>
+                    </div>
+                    
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-calendar-event"></i> Date:
+                        </div>
+                        <div class="col-md-8" id="journeyDate">Loading...</div>
+                    </div>
+                    
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-collection"></i> Class:
+                        </div>
+                        <div class="col-md-8" id="travelClass">Loading...</div>
+                    </div>
+                    
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-clock"></i> Departure Time:
+                        </div>
+                        <div class="col-md-8" id="departureTime">Loading...</div>
+                    </div>
+                    
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-clock-history"></i> Arrival Time:
+                        </div>
+                        <div class="col-md-8" id="arrivalTime">Loading...</div>
+                    </div>
+                    
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-credit-card-2-front"></i> Payment Status:
+                        </div>
+                        <div class="col-md-8" id="paymentStatus">
+                            Loading...
+                        </div>
+                    </div>
+                    
+                    <h4 class="section-title">Passenger Details</h4>
+                    <div class="row passenger-header">
+                        <div class="col-md-1">#</div>
+                        <div class="col-md-5"><strong>Name</strong></div>
+                        <div class="col-md-3"><strong>Age</strong></div>
+                        <div class="col-md-3"><strong>Gender</strong></div>
+                    </div>
+                    
+                    <!-- Passenger rows will be dynamically inserted here -->
+                    <div id="passengerContainer">
+                        <!-- Passenger data will be loaded here -->
+                    </div>
+                    
+                    <h4 class="section-title">Contact Details</h4>
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-envelope"></i> Email:
+                        </div>
+                        <div class="col-md-8" id="email">Loading...</div>
+                    </div>
+                    <div class="row details-row">
+                        <div class="col-md-4 details-label">
+                            <i class="bi bi-telephone"></i> Phone:
+                        </div>
+                        <div class="col-md-8" id="phone">Loading...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" id="printButton" disabled>
+                    <i class="bi bi-printer"></i> Print Ticket
+                </button>
+                <a href="index.html" class="btn btn-outline-secondary ml-3">
+                    <i class="bi bi-house"></i> Back to Home
+                </a>
+            </div>
+
+            <div class="train-icon">
+                <i class="bi bi-train-front"></i>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        // Theme toggle functionality
+const themeToggle = document.getElementById("theme-toggle");
+const themeText = document.getElementById("theme-text");
+
+function setTheme(theme) {
+    document.body.classList.toggle("dark-mode", theme === "dark");
+    document.body.classList.toggle("light-mode", theme === "light");
+    themeToggle.checked = theme === "dark";
+    themeText.textContent = theme === "dark" ? "☀️" : "🌙";
+    localStorage.setItem("theme", theme);
+}
+
+// Format date helper function with error handling
+function formatDate(dateString) {
+    if (!dateString) return "N/A";
+    try {
+        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString; // Return original if invalid
+        return date.toLocaleDateString('en-GB', options);
+    } catch (e) {
+        console.error("Error formatting date:", e);
+        return dateString;
+    }
+}
+
+// Format time helper function with error handling
+function formatTime(timeString) {
+    if (!timeString) return "N/A";
+    // For simple time format like "14:30", just return it as is
+    return timeString;
+}
+
+// Update the DOM with booking data
+function updateBookingDetails(booking) {
+    console.log("Booking data received:", booking);
+    
+    // Hide loading spinner
+    document.querySelector('.loading-spinner').style.display = 'none';
+    
+    // Show booking data container
+    document.getElementById('bookingDataContainer').style.display = 'block';
+    
+    try {
+        // Update PNR
+        document.getElementById('pnrNumber').textContent = booking.pnr || "N/A";
+        
+        // Update train details
+        document.getElementById('trainNumber').textContent = booking.trainNumber || "N/A";
+        document.getElementById('trainName').textContent = booking.trainName || "N/A";
+        document.getElementById('journey').textContent = `${booking.source || "N/A"} to ${booking.destination || "N/A"}`;
+        document.getElementById('journeyDate').textContent = booking.date || "N/A";
+        document.getElementById('travelClass').textContent = booking.classType || "N/A";
+        document.getElementById('departureTime').textContent = booking.departureTime || "N/A";
+        document.getElementById('arrivalTime').textContent = booking.arrivalTime || "N/A";
+        
+        // Update payment status - check if paymentDetails exists
+        let paymentStatus = "N/A";
+        let amountDisplay = "0.00";
+        
+        if (booking.paymentDetails) {
+            paymentStatus = booking.paymentDetails.paymentStatus || "N/A";
+            if (booking.paymentDetails.amount !== undefined && booking.paymentDetails.amount !== null) {
+                amountDisplay = booking.paymentDetails.amount.toFixed(2);
+            }
+        }
+        
+        const paymentStatusHTML = `
+            <span class="badge badge-paid"><i class="bi bi-check-circle"></i> ${paymentStatus}</span>
+            ₹${amountDisplay}
+        `;
+        document.getElementById('paymentStatus').innerHTML = paymentStatusHTML;
+        
+        // Update passenger details
+        const passengerContainer = document.getElementById('passengerContainer');
+        passengerContainer.innerHTML = ''; // Clear existing passengers
+        
+        if (booking.passengers && Array.isArray(booking.passengers)) {
+            booking.passengers.forEach((passenger, index) => {
+                const passengerRow = document.createElement('div');
+                passengerRow.className = 'row passenger-row';
+                passengerRow.innerHTML = `
+                    <div class="col-md-1">${index + 1}</div>
+                    <div class="col-md-5">${passenger.name || "N/A"}</div>
+                    <div class="col-md-3">${passenger.age || "N/A"} yrs</div>
+                    <div class="col-md-3">${passenger.gender || "N/A"}</div>
+                `;
+                passengerContainer.appendChild(passengerRow);
+            });
+        } else {
+            // No passengers or invalid data
+            const noPassengersRow = document.createElement('div');
+            noPassengersRow.className = 'row passenger-row';
+            noPassengersRow.innerHTML = `
+                <div class="col-12 text-center">No passenger details available</div>
+            `;
+            passengerContainer.appendChild(noPassengersRow);
+        }
+        
+        // Update contact details - check if contactDetails exists
+        let email = "N/A";
+        let phone = "N/A";
+        
+        if (booking.contactDetails) {
+            email = booking.contactDetails.email || "N/A";
+            phone = booking.contactDetails.phone || "N/A";
+        }
+        
+        document.getElementById('email').textContent = email;
+        document.getElementById('phone').textContent = phone;
+        
+        // Enable print button
+        document.getElementById('printButton').disabled = false;
+    } catch (error) {
+        console.error("Error updating booking details:", error);
+        showErrorMessage("There was an error processing your booking information: " + error.message);
+    }
+}
+
+// Show error message function
+function showErrorMessage(message) {
+    // Hide loading spinner
+    document.querySelector('.loading-spinner').style.display = 'none';
+    
+    // Create and show error message
+    const errorElement = document.createElement('div');
+    errorElement.className = 'error-message';
+    errorElement.innerHTML = `
+        <i class="bi bi-exclamation-triangle-fill"></i> 
+        <p>${message}</p>
+        <p>Please contact customer support if you need assistance.</p>
+    `;
+    
+    document.getElementById('bookingDetails').appendChild(errorElement);
+}
+
+// Set the theme from localStorage on page load
+document.addEventListener("DOMContentLoaded", function() {
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setTheme(savedTheme);
+    
+    // Event Listener for theme toggle
+    themeToggle.addEventListener("change", () => {
+        setTheme(themeToggle.checked ? "dark" : "light");
+    });
+    
+    // Get booking ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookingId = urlParams.get('bookingId');
+    
+    if (bookingId) {
+        // Set up print button
+        document.getElementById('printButton').addEventListener('click', function() {
+            window.print();
+        });
+
+        // Debugging: Log the API URL
+        const apiUrl = `/api/bookings/${bookingId}`;
+        console.log("Fetching booking from:", apiUrl);
+
+        // Fetch booking data from API
+        fetch(apiUrl)
+            .then(response => {
+                console.log("API response status:", response.status);
+                if (!response.ok) {
+                    throw new Error(`Booking not found or cannot be accessed (Status: ${response.status})`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Booking data retrieved:", data);
+                // Update the page with real booking data
+                updateBookingDetails(data);
+            })
+            .catch(error => {
+                console.error('Error fetching booking details:', error);
+                // Show error message to user
+                showErrorMessage(`Unable to load booking details. ${error.message}`);
+            });
+    } else {
+        // No booking ID provided
+        showErrorMessage('No booking ID was provided. Please check your confirmation email for the correct link.');
+    }
+});
+    </script>
+</body>
+</html>
